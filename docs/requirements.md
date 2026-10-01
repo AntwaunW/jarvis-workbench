@@ -1,5 +1,5 @@
 # JARVIS Workbench Command Center — v1 Requirements
-Version: 0.1 (draft) | Owner: Antwaun | Status: In review
+Version: 0.2 (draft) | Owner: Antwaun | Status: In review
 
 ## 1. Purpose
 A desk device behind two-way mirror glass that wakes my PC with an RFID
@@ -42,23 +42,36 @@ phone NFC, family profiles.
 | NFR-05 | Wi-Fi credentials and card UIDs shall not be committed to Git. | Check .gitignore + repo history |
 | NFR-06 | The device shall boot to idle within 5 s. | Stopwatch |
 
-## 5. Parts List (BOM)
-| Part | Qty | Status |
-|------|-----|--------|
-| Elecrow CrowPanel 7.0" Advance ESP32-S3 | 1 | Have |
-| PC817 optocoupler module | 1 | Have — CONFIRM channel count (need 2) |
-| 13.56 MHz RFID cards/tags | 3+ | Have — one per project + spare |
-| PN532 RFID/NFC module | 1 | CONFIRM owned/ordered |
-| Cable for CrowPanel I2C-OUT connector | 1 | NEED — check connector type in Elecrow wiki |
-| Geekworm 5V 4A USB-C supply | 1 | CONFIRM owned/ordered |
-| 2-pin header splitters (power SW + power LED) | 2 | CONFIRM — need one for each header |
-| Two-way mirror film | 1 | CONFIRM owned/ordered |
-| microSD card (≤32 GB, FAT32) | 1 | NEED if tasks stored on SD (see OQ-02) |
-| RTC coin cell battery | 1 | CONFIRM type in wiki / included? |
-| Female-female jumpers, multimeter | — | Likely have |
-| Speakers, INMP441, MAX98357A | — | Not used in v1 |
+## 5. Constraints
+| ID   | Constraint |
+|------|------------|
+| C-01 | v1 development hardware: ESP32-2432S028R ("CYD", 2.8" 240x320, resistive touch). |
+| C-02 | v1 target hardware: Elecrow CrowPanel 7.0" Advance ESP32-S3. |
+| C-03 | App logic must not call display, touch, or RFID libraries directly (HAL) so code ports from CYD to CrowPanel. |
+| C-04 | CYD has very few free GPIO pins; all pin assignments recorded in docs/wiring.md. |
+| C-05 | Optocouplers are bare PC817 chips (not modules); resistors selected per datasheet. |
 
-## 6. Open Questions
+## 6. Parts List (BOM)
+| Part | Qty | Used In | Status |
+|------|-----|---------|--------|
+| ESP32-2432S028R "CYD" 2.8" display board | 1 | v1 dev | Purchased |
+| JST 1.25mm 4-pin cables (for CYD connectors) | 2+ | v1 dev | Confirm included with CYD |
+| PN532 NFC/RFID module (AITRIP 2-pack, I2C) | 1 | v1 | Purchased |
+| 13.56 MHz cards/tags (S50 + existing) | 3+ | v1 | Have |
+| PC817 optocoupler, bare DIP-4 chip | 2 | v1 | Purchased (50-pack) |
+| 220Ω resistor (opto LED side) | 2 | v1 | Have (kit) |
+| 10kΩ resistor (bench test pull-up) | 1 | v1 dev | Have (kit) |
+| Breadboard, jumpers, multimeter | — | v1 dev | Have |
+| Elecrow CrowPanel 7.0" Advance ESP32-S3 | 1 | v1 target | To buy |
+| Geekworm 5V 4A USB-C supply | 1 | v1 target | To buy |
+| Cable for CrowPanel I2C-OUT connector | 1 | v1 target | To buy (check wiki for type) |
+| Two-way mirror film | 1 | v1 target | To buy |
+| 2-pin header splitters (power SW + power LED) | 2 | v1 install | To buy |
+| microSD card (≤32 GB) | — | — | Not needed v1 (using NVS) |
+| Speakers, INMP441 mic, MAX98357A amp | — | v4 | Later |
+| INA219/INA226 current sensor | 1 | v2 | Later |
+
+## 7. Open Questions
 - OQ-01: Which CrowPanel pins are free for the 2 optocoupler channels? (UART port pins as GPIO?)
 - OQ-02: Where do v1 tasks live? (a) JSON file on microSD, (b) edited on-device, (c) pushed from PC later
 - OQ-03: Does the PN532 I2C address conflict with the touch controller on the same bus?
