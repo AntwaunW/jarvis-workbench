@@ -1,0 +1,12 @@
+# PlatformIO build output
+.pio/
+.vscode/
+
+# Node (pc-agent later)
+node_modules/
+
+# Secrets: NEVER commit (NFR-05)
+.env
+firmware/include/secrets.h
+
+*.log
