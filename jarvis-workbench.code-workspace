@@ -1,0 +1,7 @@
+{
+  "folders": [
+    { "name": "firmware", "path": "firmware" },
+    { "name": "jarvis-workbench", "path": "." }
+  ],
+  "settings": {}
+}
