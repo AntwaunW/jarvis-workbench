@@ -1,34 +1,62 @@
 #include <Arduino.h>
+#include <TFT_eSPI.h>  // Display library; pins/driver come from platformio.ini build_flags
 
-constexpr uint32_t BLINK_INTERVAL_MS = 500; // Sets the interval for blinking the LED in milliseconds. 500 ms = 0.5 seconds.
-constexpr uint8_t LED_RED_PIN = 4; // Sets the pin number for the red
-constexpr uint8_t LED_ON = LOW; // Defines the state for turning the LED ON. HIGH means the pin is set to a high voltage level.
-constexpr uint8_t LED_OFF = HIGH; // Defines the state for turning the LED OFF. LOW means
+// ---------- Heartbeat LED ----------
+constexpr uint32_t BLINK_INTERVAL_MS     = 500;   // LED toggles every 0.5 s
+constexpr uint32_t SERIAL_HEARTBEAT_MS   = 5000;  // Serial "alive" print every 5 s
+constexpr uint8_t  LED_RED_PIN           = 4;
+constexpr uint8_t  LED_ON  = LOW;   // Active-LOW: pin at 0 V lets current flow, so the LED lights
+constexpr uint8_t  LED_OFF = HIGH;  // Pin at 3.3 V = no voltage difference, so the LED stays dark
 
+// ---------- Display ----------
+TFT_eSPI tft = TFT_eSPI();  // Global so both setup() and loop() can use it
 
-void setup() { 
-
-    // Sets the speed in bits per second (baud) for serial data transmission. 115200 is a common speed for ESP32.
+void setup() {
     Serial.begin(115200);
-    
-    // Print "Boot Ok" to serial, test that the serial connection is working.
-    Serial.println("Boot Ok");
-  
-    // Set the LED pin as an OUTPUT. configures a specific digital pin to behave as an INPUT, OUTPUT, or INPUT_PULLUP
+    Serial.println("Boot OK");
+
     pinMode(LED_RED_PIN, OUTPUT);
+    digitalWrite(LED_RED_PIN, LED_OFF);  // Start in a known state, never assume
+
+    // 1) Turn the screen on FIRST, then configure it
+    tft.init();
+
+    // 2) Rotation: 0/2 = portrait, 1/3 = landscape. 3 = landscape, flipped 180° from 1
+    tft.setRotation(3);
+
+    // 3) Wipe whatever random pixels were there at power-up
+    tft.fillScreen(TFT_BLACK);
+
+    // 4) Text: white letters ON a black box, so redraws overwrite cleanly (no flicker)
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    // 5) MC_DATUM = "Middle Center": x,y now marks the CENTER of the text, not its top-left
+    tft.setTextDatum(MC_DATUM);
+
+    // 6) Center of a 320x240 landscape screen is (160, 120). Last arg = font NUMBER 4
+    tft.drawString("Hello JARVIS", tft.width() / 2, tft.height() / 2, 4);
+
+    // 7) Last line of setup: if you don't see this in serial, the display code hung above
+    Serial.println("Display init done");
 }
 
 void loop() {
     uint32_t now = millis();
 
-    static uint32_t lastBlinkTime = 0; // Stores the last time the LED was toggled. static means it retains its value between function calls.
+    // --- LED heartbeat ---
+    static uint32_t lastBlinkTime = 0;  // static = remembers its value between loop() runs
+    static bool ledIsOn = false;
 
-    static bool ledIsOn = false; // Tracks the current state of the LED. true = ON, false = OFF
-    
-    if ((now - lastBlinkTime) >= BLINK_INTERVAL_MS ) {
-        ledIsOn = !ledIsOn; // Toggle the LED state. If it was ON, turn it OFF, and vice versa.
+    if (now - lastBlinkTime >= BLINK_INTERVAL_MS) {
+        lastBlinkTime = now;
+        ledIsOn = !ledIsOn;
         digitalWrite(LED_RED_PIN, ledIsOn ? LED_ON : LED_OFF);
-        lastBlinkTime = now; // Update the last blink time to the current time.
-        Serial.println("Hello World"); // Print "Hello World" to serial each time the LED state changes.
+    }
+
+    // --- Serial heartbeat (slow, so it doesn't bury real messages) ---
+    static uint32_t lastSerialBeat = 0;
+    if (now - lastSerialBeat >= SERIAL_HEARTBEAT_MS) {
+        lastSerialBeat = now;
+        Serial.println("[heartbeat] alive");
     }
 }
