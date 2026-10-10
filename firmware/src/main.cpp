@@ -1,5 +1,12 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>  // Display library; pins/driver come from platformio.ini build_flags
+#include <XPT2046_Touchscreen.h> // Touchscreen library; pins/driver come from platformio.ini build_flags
+
+#define CLK 25 // Clock pin for SPI
+#define MISO 32 // Master In Slave Out pin for SPI
+#define MOSI 39 // Master Out Slave In pin for SPI
+#define CS 33 // Chip Select pin for SPI
+#define IRQ 36 // Interrupt Request pin for touchscreen
 
 // ---------- Heartbeat LED ----------
 constexpr uint32_t BLINK_INTERVAL_MS     = 500;   // LED toggles every 0.5 s
@@ -44,6 +51,12 @@ void loop() {
     uint32_t now = millis();
 
     // --- LED heartbeat ---
+    /*
+     * This is a simple "heartbeat" LED that blinks at a fixed interval.
+     * It uses static variables to remember the last time it blinked and the current state of the LED.
+     * The LED is toggled every BLINK_INTERVAL_MS milliseconds.
+     * The LED is active-low, so writing LOW turns it on and HIGH turns it off.
+     * */
     static uint32_t lastBlinkTime = 0;  // static = remembers its value between loop() runs
     static bool ledIsOn = false;
 
@@ -54,6 +67,11 @@ void loop() {
     }
 
     // --- Serial heartbeat (slow, so it doesn't bury real messages) ---
+    /*
+     * This is a simple "heartbeat" message that prints to the serial console at a fixed interval.
+     * It uses a static variable to remember the last time it printed the message.
+     * The message is printed every SERIAL_HEARTBEAT_MS milliseconds.
+     * */
     static uint32_t lastSerialBeat = 0;
     if (now - lastSerialBeat >= SERIAL_HEARTBEAT_MS) {
         lastSerialBeat = now;
